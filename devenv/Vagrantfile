@@ -1,0 +1,111 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VMUSER="dev"
+SF="/home/andreic/workspace"
+
+S2N="
+2000:telnet:600:/dev/ttyUSB0:9600 8DATABITS NONE 1STOPBIT banner
+2001:telnet:600:/dev/ttyUSB1:9600 8DATABITS NONE 1STOPBIT banner
+2002:telnet:600:/dev/ttyUSB2:9600 8DATABITS NONE 1STOPBIT banner
+
+2010:telnet:600:/dev/ttyUSB0:115200 8DATABITS NONE 1STOPBIT banner
+2011:telnet:600:/dev/ttyUSB1:115200 8DATABITS NONE 1STOPBIT banner
+2012:telnet:600:/dev/ttyUSB2:115200 8DATABITS NONE 1STOPBIT banner
+
+3000:telnet:600:/dev/ttyUSB0:74880 8DATABITS NONE 1STOPBIT banner
+3001:telnet:600:/dev/ttyUSB1:74880 8DATABITS NONE 1STOPBIT banner
+3002:telnet:600:/dev/ttyUSB2:74880 8DATABITS NONE 1STOPBIT banner
+"
+
+# Add more rights to the user
+$script_updateuser= <<SCRIPT
+cp -pr /home/vagrant/.ssh /home/#{VMUSER}/
+echo "%#{VMUSER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/#{VMUSER}
+SCRIPT
+
+# Install stuff
+#NOTE: firefox link so web browser icon works (it points to this by default)
+$script_installsw = <<SCRIPT
+apt-get update
+apt-get -y install python-pip
+apt-get -y install python3-pip
+apt-get -y install gnome-system-monitor
+apt-get -y install ser2net
+ln -s /usr/bin/firefox /usr/bin/epiphany
+SCRIPT
+
+
+# Install ESP and Arduino utils
+$script_installesp = <<SCRIPT
+pip install esptool
+
+wget --progress=bar:force http://downloads.arduino.cc/arduino-1.8.8-linux64.tar.xz -P /home/#{VMUSER}/Downloads
+tar xvf /home/#{VMUSER}/Downloads/arduino-1.8.8-linux64.tar.xz -C /home/#{VMUSER}/Downloads
+rm /home/#{VMUSER}/Downloads/arduino-1.8.8-linux64.tar.xz
+
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --pref \\"boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json\\" --save-prefs"
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-boards esp8266:esp8266 --save-prefs"
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-library \\"DHT sensor library\\""
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-library \\"Adafruit Unified Sensor\\""
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-library \\"PubSubClient\\""
+
+chown -R #{VMUSER}:#{VMUSER} /home/#{VMUSER}
+SCRIPT
+
+# Configure share - make it easier to find
+$script_configshare = <<SCRIPT
+ln -s /vm_global_share /home/#{VMUSER}/workspace
+SCRIPT
+
+# Update the ser2net config
+$script_configser2net = <<SCRIPT
+head -n -4 /etc/ser2net.conf > /etc/ser2net.conf.new
+mv /etc/ser2net.conf.new /etc/ser2net.conf
+echo "#{S2N}" >> /etc/ser2net.conf
+service ser2net stop
+service ser2net start
+SCRIPT
+
+
+Vagrant.configure("2") do |config|
+
+    #Make sure we do not login using the 'vagrant' user
+    VAGRANT_COMMAND = ARGV[0]
+    if VAGRANT_COMMAND == "ssh"
+          config.ssh.username = VMUSER
+    end
+
+    config.vm.box = "axcxl/debian9_xfce"
+
+
+    config.vm.provider :virtualbox do |vb|
+        vb.gui = true
+        vb.memory = 4096
+        vb.cpus = 4
+    end
+
+    config.vm.define "devesp" do |machine|
+
+        machine.vm.hostname = 'devesp'
+
+        # Create the additional user
+        machine.vm.provision "shell", inline: $script_updateuser 
+
+        # Install SW
+        machine.vm.provision "shell", inline: $script_installsw
+
+        # Install ESP dev tools
+        machine.vm.provision "shell", inline: $script_installesp
+
+        # configure share
+        machine.vm.provision "shell", inline: $script_configshare
+
+	# configure ser2net
+        machine.vm.provision "shell", inline: $script_configser2net
+    end
+
+    config.vm.synced_folder "#{SF}", "/vm_global_share", group: "vboxsf", mount_options: ["dmode=775,fmode=664"]
+
+end
+
