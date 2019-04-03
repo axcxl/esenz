@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 VMUSER="dev"
-SF="/home/andreic/workspace"
+SF="~/esenz/environment"
 
 S2N="
 2000:telnet:600:/dev/ttyUSB0:9600 8DATABITS NONE 1STOPBIT banner
@@ -21,7 +21,7 @@ S2N="
 # Add more rights to the user
 $script_updateuser= <<SCRIPT
 cp -pr /home/vagrant/.ssh /home/#{VMUSER}/
-echo "%#{VMUSER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/#{VMUSER}
+echo "%#{VMUSER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/#{VMUSER}
 SCRIPT
 
 # Install stuff
@@ -32,6 +32,8 @@ apt-get -y install python-pip
 apt-get -y install python3-pip
 apt-get -y install gnome-system-monitor
 apt-get -y install ser2net
+apt-get -y install mosquitto
+apt-get -y install mosquitto-clients
 ln -s /usr/bin/firefox /usr/bin/epiphany
 SCRIPT
 
