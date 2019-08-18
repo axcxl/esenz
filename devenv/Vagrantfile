@@ -23,6 +23,8 @@ S2N="
 $script_updateuser= <<SCRIPT
 cp -pr /home/vagrant/.ssh /home/#{VMUSER}/
 echo "%#{VMUSER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/#{VMUSER}
+addgroup #{VMUSER} vboxsf
+addgroup #{VMUSER} dialout
 SCRIPT
 
 # Install stuff
