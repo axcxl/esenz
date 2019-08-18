@@ -3,6 +3,7 @@
 
 VMUSER="dev"
 SF="~/esenz/environment"
+ARDUINO_VERS="1.8.9"
 
 S2N="
 2000:telnet:600:/dev/ttyUSB0:9600 8DATABITS NONE 1STOPBIT banner
@@ -34,7 +35,7 @@ apt-get -y install gnome-system-monitor
 apt-get -y install ser2net
 apt-get -y install mosquitto
 apt-get -y install mosquitto-clients
-ln -s /usr/bin/firefox /usr/bin/epiphany
+#ln -s /usr/bin/firefox /usr/bin/epiphany
 SCRIPT
 
 
@@ -42,17 +43,18 @@ SCRIPT
 $script_installesp = <<SCRIPT
 pip install esptool
 
-wget --progress=bar:force http://downloads.arduino.cc/arduino-1.8.8-linux64.tar.xz -P /home/#{VMUSER}/Downloads
-tar xvf /home/#{VMUSER}/Downloads/arduino-1.8.8-linux64.tar.xz -C /home/#{VMUSER}/Downloads
-rm /home/#{VMUSER}/Downloads/arduino-1.8.8-linux64.tar.xz
+wget --progress=bar:force http://downloads.arduino.cc/arduino-#{ARDUINO_VERS}-linux64.tar.xz -P /home/#{VMUSER}/Downloads
+tar xvf /home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}-linux64.tar.xz -C /home/#{VMUSER}/Downloads
+rm /home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}-linux64.tar.xz
 
-su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --pref \\"boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json\\" --save-prefs"
-su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-boards esp8266:esp8266 --save-prefs"
-su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-library \\"DHT sensor library\\""
-su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-library \\"Adafruit Unified Sensor\\""
-su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-1.8.8/arduino --install-library \\"PubSubClient\\""
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino --pref \\"boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json\\" --save-prefs"
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino --install-boards esp8266:esp8266 --save-prefs"
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino --install-library \\"DHT sensor library\\""
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino --install-library \\"Adafruit Unified Sensor\\""
+su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino --install-library \\"PubSubClient\\""
 
 chown -R #{VMUSER}:#{VMUSER} /home/#{VMUSER}
+su -l #{VMUSER} bash -c "ln -s /home/#{VMUSER}/Downloads/arduino-1.8.9/arduino /home/#{VMUSER}/Desktop/Arduino"
 SCRIPT
 
 # Configure share - make it easier to find
@@ -79,7 +81,6 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.box = "axcxl/debian9_xfce"
-
 
     config.vm.provider :virtualbox do |vb|
         vb.gui = true
