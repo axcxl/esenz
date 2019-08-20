@@ -31,8 +31,8 @@
 #define DHTTYPE DHT21   // DHT 21 (AM2301)
 
 const char* ssid = "NLink";
-const char* password = "password";
-const char* mqtt_server = "buster.home";
+const char* password = "password"; //DO NOT COMMIT
+const char* mqtt_server = "esenz.home";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -41,6 +41,8 @@ DHT dht(DHTPIN, DHTTYPE);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
+
+String id;
 
 void setup_wifi() {
 
@@ -92,12 +94,24 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-001";
-    // clientId += String(random(0xffff), HEX);
+    String mac = String(WiFi.macAddress());
+    char tmp[12];
+
+    // MAC format - FF:FF:FF:FF:FF:FF, remove the :
+    int j = 0;
+    for(int i = 0; i <= 16; i++) {
+      if(mac[i] != ':') {
+        tmp[j++] = mac[i];
+      }
+    }
+
+    id = String(tmp);
+
+    Serial.print("Using ID: ");
+    Serial.println(id);
     
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(id.c_str())) {
       
       Serial.println("connected");
       
@@ -143,8 +157,17 @@ void loop() {
     Serial.print(t);
     Serial.println(F("°C "));
      
-      
-    client.publish("temperature", String(t).c_str());
-    client.publish("humidity", String(h).c_str());
+    String temp = "data/temperature";
+    temp += '/';
+    temp += id;
+    temp += '\0';
+
+    String hum = "data/humidity";
+    hum += '/';
+    hum += id;
+    hum += '\0';
+    
+    client.publish(temp.c_str(), String(t).c_str());
+    client.publish(hum.c_str(), String(h).c_str());
   }
 }
