@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 VMUSER="dev"
-SF="~/esenz/environment"
+SF="../"
 ARDUINO_VERS="1.8.9"
 
 S2N="
