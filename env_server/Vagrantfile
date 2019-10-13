@@ -1,21 +1,14 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+SF_NR="../conf_nodered"
+SF_DM="../conf_domoticz"
+
 # Install stuff
 $script_installsw = <<SCRIPT
 apt-get update
-apt-get dist-upgrade
 
-apt-get install -y ntp
-
-wget -O jvm.tar.gz https://javadl.oracle.com/webapps/download/AutoDL?BundleId=239848_230deb18db3e4014bb8e3e8324f81b43
-tar xvf jvm.tar.gz
-ln -s /home/vagrant/jre1.8.0_221/bin/java /usr/bin/java
-
-wget -qO - 'https://bintray.com/user/downloadSubjectPublicKey?username=openhab' | sudo apt-key add -
-apt-get install apt-transport-https
-echo 'deb https://openhab.jfrog.io/openhab/openhab-linuxpkg testing main' | sudo tee /etc/apt/sources.list.d/openhab2.list
-apt-get update && sudo apt-get install openhab2
+apt-get install -y ntp mosquitto
 SCRIPT
 
 
@@ -30,27 +23,22 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "debian/buster64"
-
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine. In the example below,
-  # accessing "localhost:8080" will access port 80 on the guest machine.
-  # NOTE: This will enable public access to the opened port
-  config.vm.network "forwarded_port", guest: 8080, host: 8080
-
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine and only allow access
-  # via 127.0.0.1 to disable public access
-  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
-
-  # Create a private network, which allows host-only access to the machine
-  # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.box = "debian/contrib-buster64"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
   # your network.
-  # config.vm.network "public_network"
+  config.vm.network "public_network", bridge: "eth0"
+
+  # Docker stuff
+  config.vm.provision "docker" do |d|
+    # Nodered for mqtt -> json translation
+    d.run "nodered/node-red",
+      args: "-it -p 1880:1880 --name mynodered -v /home/vagrant/conf_nodered:/data"
+
+    d.run "linuxserver/domoticz",
+      args: "--name domoticz -p 8080:8080 -e PUID=1000 -e PGID=1000 -v /home/vagrant/conf_domoticz:/config"
+  end
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
@@ -63,14 +51,18 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
     # Customize the amount of memory on the VM:
     vb.memory = 2048
-    vb.cpus = 2
+    vb.cpus = 1
   end
   
   config.vm.define "esenz" do |machine|
 	machine.vm.hostname = 'esenz'
 	
 	# Install SW
-  	machine.vm.provision "shell", inline: $script_installsw
+	machine.vm.provision "shell", inline: $script_installsw
   end
+    
+  config.vm.synced_folder "#{SF_NR}", "/home/vagrant/conf_nodered", group: "vboxsf", mount_options: ["dmode=775,fmode=664"]
+  config.vm.synced_folder "#{SF_DM}", "/home/vagrant/conf_domoticz", group: "vboxsf", mount_options: ["dmode=775,fmode=664"]
+
 
 end

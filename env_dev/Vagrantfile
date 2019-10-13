@@ -3,7 +3,7 @@
 
 VMUSER="dev"
 SF="../"
-ARDUINO_VERS="1.8.9"
+ARDUINO_VERS="1.8.10"
 
 S2N="
 2000:telnet:600:/dev/ttyUSB0:9600 8DATABITS NONE 1STOPBIT banner
@@ -35,9 +35,7 @@ apt-get -y install python-pip
 apt-get -y install python3-pip
 apt-get -y install gnome-system-monitor
 apt-get -y install ser2net
-apt-get -y install mosquitto
 apt-get -y install mosquitto-clients
-#ln -s /usr/bin/firefox /usr/bin/epiphany
 SCRIPT
 
 
@@ -56,7 +54,7 @@ su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/ardui
 su -l #{VMUSER} bash -c "/home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino --install-library \\"PubSubClient\\""
 
 chown -R #{VMUSER}:#{VMUSER} /home/#{VMUSER}
-su -l #{VMUSER} bash -c "ln -s /home/#{VMUSER}/Downloads/arduino-1.8.9/arduino /home/#{VMUSER}/Desktop/Arduino"
+su -l #{VMUSER} bash -c "ln -s /home/#{VMUSER}/Downloads/arduino-#{ARDUINO_VERS}/arduino /home/#{VMUSER}/Desktop/Arduino"
 SCRIPT
 
 # Configure share - make it easier to find
