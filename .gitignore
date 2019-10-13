@@ -1,1 +1,7 @@
 **/.vagrant
+**/.Vagrantfile.swp
+conf_domoticz/keys
+conf_domoticz/scripts
+conf_domoticz/domocookie.txt
+conf_domoticz/domoticz.db-shm
+conf_domoticz/domoticz.db-wal
