@@ -106,7 +106,7 @@ void reconnect() {
 
     // MAC format - FF:FF:FF:FF:FF:FF, remove the :
     int j = 0;
-    for(int i = 0; i <= 16; i++) {
+    for(int i = 9; i <= 16; i++) {
       if(mac[i] != ':') {
         tmp[j++] = mac[i];
       }
