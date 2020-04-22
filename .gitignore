@@ -5,3 +5,4 @@ conf_domoticz/scripts
 conf_domoticz/domocookie.txt
 conf_domoticz/domoticz.db-shm
 conf_domoticz/domoticz.db-wal
+esenz/wifi_credentials.h

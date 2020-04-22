@@ -26,13 +26,20 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include "DHT.h"
+#include "wifi_credentials.h"
+
+/* These are defined in a wifi_credentials.h file placed in the same folder:
+ *  #define SSID "<ssid>"
+ *  #define PASS "<password>"
+ *  #define SERV "<server ip/ server name if DNS is working>"
+ */
+const char* ssid = SSID;
+const char* password = PASS;
+const char* mqtt_server = SERV;
 
 #define DHTPIN 2     // Digital pin connected to the DHT sensor
 #define DHTTYPE DHT21   // DHT 21 (AM2301)
 
-const char* ssid = "NLink";
-const char* password = "password"; //DO NOT COMMIT
-const char* mqtt_server = "esenz.home";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
