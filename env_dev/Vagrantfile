@@ -1,23 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-VMUSER="dev"
+VMUSER="vagrant"
 SF="../"
-ARDUINO_VERS="1.8.10"
-
-S2N="
-2000:telnet:600:/dev/ttyUSB0:9600 8DATABITS NONE 1STOPBIT banner
-2001:telnet:600:/dev/ttyUSB1:9600 8DATABITS NONE 1STOPBIT banner
-2002:telnet:600:/dev/ttyUSB2:9600 8DATABITS NONE 1STOPBIT banner
-
-2010:telnet:600:/dev/ttyUSB0:115200 8DATABITS NONE 1STOPBIT banner
-2011:telnet:600:/dev/ttyUSB1:115200 8DATABITS NONE 1STOPBIT banner
-2012:telnet:600:/dev/ttyUSB2:115200 8DATABITS NONE 1STOPBIT banner
-
-3000:telnet:600:/dev/ttyUSB0:74880 8DATABITS NONE 1STOPBIT banner
-3001:telnet:600:/dev/ttyUSB1:74880 8DATABITS NONE 1STOPBIT banner
-3002:telnet:600:/dev/ttyUSB2:74880 8DATABITS NONE 1STOPBIT banner
-"
+ARDUINO_VERS="1.8.12"
 
 # Add more rights to the user
 $script_updateuser= <<SCRIPT
@@ -34,7 +20,6 @@ apt-get update
 apt-get -y install python-pip
 apt-get -y install python3-pip
 apt-get -y install gnome-system-monitor
-apt-get -y install ser2net
 apt-get -y install mosquitto-clients
 SCRIPT
 
@@ -62,16 +47,6 @@ $script_configshare = <<SCRIPT
 ln -s /vm_global_share /home/#{VMUSER}/workspace
 SCRIPT
 
-# Update the ser2net config
-$script_configser2net = <<SCRIPT
-head -n -4 /etc/ser2net.conf > /etc/ser2net.conf.new
-mv /etc/ser2net.conf.new /etc/ser2net.conf
-echo "#{S2N}" >> /etc/ser2net.conf
-service ser2net stop
-service ser2net start
-SCRIPT
-
-
 Vagrant.configure("2") do |config|
 
     #Make sure we do not login using the 'vagrant' user
@@ -80,7 +55,7 @@ Vagrant.configure("2") do |config|
           config.ssh.username = VMUSER
     end
 
-    config.vm.box = "axcxl/debian9_xfce"
+    config.vm.box = "axcxl/debian11_xfce"
 
     config.vm.provider :virtualbox do |vb|
         vb.gui = true
@@ -103,12 +78,12 @@ Vagrant.configure("2") do |config|
 
         # configure share
         machine.vm.provision "shell", inline: $script_configshare
-
-	# configure ser2net
-        machine.vm.provision "shell", inline: $script_configser2net
     end
 
-    config.vm.synced_folder "#{SF}", "/vm_global_share", group: "vboxsf", mount_options: ["dmode=775,fmode=664"]
+    #Warning: issue with shared folder and vagrant.
+    #Workaround: vagrant up -> wait until error -> run `vagrant up --provision` once -> wait to finish and manually
+    #mount the shared folder to /vm_global_share. Only run provision once when the VM is created.
+    #config.vm.synced_folder "#{SF}", "/vm_global_share", group: "vboxsf", mount_options: ["dmode=775,fmode=664"]
 
 end
 
